@@ -1,4 +1,5 @@
-FROM ubuntu:bionic-20190612
+# fork of repo https://github.com/sameersbn/docker-squid/issues/68
+FROM alpine:3.12.1
 LABEL maintainer="sameer@damagehead.com"
 
 ENV SQUID_VERSION=3.5.27 \
@@ -6,12 +7,19 @@ ENV SQUID_VERSION=3.5.27 \
     SQUID_LOG_DIR=/var/log/squid \
     SQUID_USER=proxy
 
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y squid=${SQUID_VERSION}* \
- && rm -rf /var/lib/apt/lists/*
+RUN apk update --no-cache \
+ && apk add bash squid --no-cache
+
+RUN adduser --system proxy \
+&& addgroup --system proxy \
+&& mkdir "$SQUID_CACHE_DIR/" \
+&& chown -R proxy:proxy "$SQUID_LOG_DIR/" \
+&& chown -R proxy:proxy /var/cache/squid/ \
+&& chown -R proxy:proxy "$SQUID_CACHE_DIR/" \
+&& chown -R proxy:proxy /var/run/
 
 COPY entrypoint.sh /sbin/entrypoint.sh
 RUN chmod 755 /sbin/entrypoint.sh
-
+USER proxy:proxy
 EXPOSE 3128/tcp
 ENTRYPOINT ["/sbin/entrypoint.sh"]
