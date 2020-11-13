@@ -2,8 +2,7 @@
 FROM alpine:3.12.1
 LABEL maintainer="sameer@damagehead.com"
 
-ENV SQUID_VERSION=3.5.27 \
-    SQUID_CACHE_DIR=/var/spool/squid \
+ENV SQUID_CACHE_DIR=/var/spool/squid \
     SQUID_LOG_DIR=/var/log/squid \
     SQUID_USER=proxy
 
@@ -16,7 +15,10 @@ RUN adduser --system proxy \
 && chown -R proxy:proxy "$SQUID_LOG_DIR/" \
 && chown -R proxy:proxy /var/cache/squid/ \
 && chown -R proxy:proxy "$SQUID_CACHE_DIR/" \
-&& chown -R proxy:proxy /var/run/
+&& chown -R proxy:proxy /var/run/ 
+
+RUN /usr/lib/squid/security_file_certgen -c -s /var/lib/ssl_db -M 4MB \
+&& chown -R proxy:proxy /var/lib/ssl_db
 
 COPY entrypoint.sh /sbin/entrypoint.sh
 RUN chmod 755 /sbin/entrypoint.sh
